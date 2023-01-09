@@ -1,0 +1,173 @@
+image:
+  repository: kong/kong-gateway
+  tag: 2.8.2.1
+  pullSecrets:
+    - kong-enterprise-edition-docker
+
+env:
+  admin_gui_listen: 0.0.0.0:8002 http2, 0.0.0.0:8445 ssl, 0.0.0.0:9811
+  admin_gui_url: https://kongfused.local:8445
+  admin_listen: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+  portal_gui_listen: 0.0.0.0:8003, 0.0.0.0:8446 ssl
+  portal_api_listen: 0.0.0.0:8004, 0.0.0.0:8447 ssl
+  prefix: /kong_prefix/
+  database: postgres
+  log_level: debug
+  admin_gui_auth_conf_secret: kong-session-config
+  admin_api_uri: https://admin.kongfused.local:8444
+  portal_gui_host: portal.kongfused.local:8446
+  portal_gui_protocol: https
+  portal_api_url: https://portalapi.kongfused.local:8447
+  # admin_gui_ssl_cert:  /etc/secrets/kongfused-cert-tls/tls.crt
+  # admin_gui_ssl_cert_key:  /etc/secrets/kongfused-cert-tls/tls.key
+  proxy_access_log: /tmp/access.log
+  proxy_error_log: /tmp/error.log
+  # lua_ssl_trusted_certificate: /etc/secrets/kongfused-cert-tls/ca.crt
+  # ssl_cert: /etc/secrets/selfsigned-cert-tls/tls.crt
+  # ssl_cert_key:  /etc/secrets/selfsigned-cert-tls/tls.key
+  # admin_ssl_cert: /etc/secrets/selfsigned-cert-tls/tls.crt
+  # admin_ssl_cert_key:  /etc/secrets/selfsigned-cert-tls/tls.key
+
+  password:
+    valueFrom:
+      secretKeyRef:
+        name: kong-enterprise-superuser-password 
+        key: password 
+  kong_admin_token:
+    valueFrom:
+      secretKeyRef:
+        name: kong-enterprise-superuser-password
+        key: password
+  admin_gui_session_conf:
+      valueFrom:
+      secretKeyRef:
+        name: kong-session-config
+        key: admin_gui_session_conf
+
+deployment:
+  kong:
+    enabled: true
+    daemonset: false
+
+admin:
+  enabled: true
+  type: LoadBalancer
+  annotations:
+    konghq.com/protocol: "https"
+
+  http:
+    enabled: true
+    servicePort: 8001
+    containerPort: 8001
+    parameters:
+    - http
+
+  tls:
+    enabled: true
+    servicePort: 8444
+    containerPort: 8444
+    parameters:
+    - http2
+
+
+migrations:
+  preUpgrade: true
+  postUpgrade: true
+  annotations:
+    sidecar.istio.io/inject: false
+    kuma.io/sidecar-injection: "disabled"
+
+
+enterprise:
+  enabled: true
+  license_secret: kong-enterprise-license
+  vitals:
+    enabled: false
+  portal:
+    enabled: true
+  rbac:
+    enabled: true
+    admin_gui_auth: basic-auth
+    admin_gui_auth_conf_secret: kong-session-config
+
+manager:
+  enabled: true
+  type: LoadBalancer
+  annotations:
+    konghq.com/protocol: "https"
+
+  http:
+    enabled: true
+    servicePort: 8002
+    containerPort: 8002
+
+  tls:
+    enabled: true
+    servicePort: 8445
+    containerPort: 8445
+    parameters:
+    - http2
+    - https
+
+
+portal:
+  enabled: true
+  type: LoadBalancer
+  annotations:
+    konghq.com/protocol: "https"
+
+  http:
+    enabled: true
+    servicePort: 8003
+    containerPort: 8003
+    parameters: 
+    - http
+
+  tls:
+    enabled: true
+    servicePort: 8446
+    containerPort: 8446
+    parameters:
+    - http2
+
+
+portalapi:
+  enabled: true
+  type: LoadBalancer
+  annotations:
+    konghq.com/protocol: "https"
+
+  http:
+    enabled: true
+    servicePort: 8004
+    containerPort: 8004
+    parameters: 
+    - http
+
+  tls:
+    enabled: true
+    servicePort: 8447
+    containerPort: 8447
+    parameters:
+    - http2
+
+
+postgresql:
+  enabled: true
+  auth:
+    username: kong
+    database: kong
+  image:
+    tag: 13.6.0-debian-10-r52
+  service:
+    ports:
+      postgresql: "5432"
+
+ingressController:
+  installCRDS: false
+  enabled: true
+  image:
+    repository: kong/kubernetes-ingress-controller
+    tag: "2.7"
+  args:
+  - --log-level=debug  
