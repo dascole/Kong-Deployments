@@ -1,0 +1,23 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongClusterPlugin
+metadata:
+  name: post-plugin
+  annotations:
+    kubernetes.io/ingress.class: "kong"
+  labels:
+    global: 'true'
+config:
+  access:
+  - print(kong.request.get_header("User-Agent"))
+  body_filter:
+  - kong.log.err('Hi there Body!')
+  certificate:
+  - kong.log.err('Hi there Certificate!')
+  functions: []
+  header_filter:
+  - kong.log.err('Hi there Header!')
+  log:
+  - kong.log.err('Hi there Log!')
+  rewrite:
+  - kong.log.err('Hi there Rewrite!')
+plugin: post-function

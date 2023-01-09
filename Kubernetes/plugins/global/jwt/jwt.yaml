@@ -1,0 +1,22 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongClusterPlugin
+metadata:
+  name: jwt-plugin
+  annotations:
+    kubernetes.io/ingress.class: "kong"
+  labels:
+    global: 'true'
+plugin: jwt
+config:
+  claims_to_verify:
+  - exp
+  cookie_names:
+  - session
+  header_names:
+  - authorization
+  key_claim_name: iss
+  maximum_expiration: 0
+  run_on_preflight: true
+  secret_is_base64: false
+  uri_param_names:
+  - jwt

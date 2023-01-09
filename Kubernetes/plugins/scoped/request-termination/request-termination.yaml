@@ -1,0 +1,8 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: request-termination
+config: 
+  status_code: 200
+  message: '{"Success": "Yippee ki yay!"}'
+plugin: request-termination

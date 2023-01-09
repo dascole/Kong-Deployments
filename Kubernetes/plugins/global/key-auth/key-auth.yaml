@@ -1,0 +1,27 @@
+apiVersion: v1
+data:
+  key: a29uZw==
+  kongCredType: a2V5LWF1dGg=
+kind: Secret
+metadata:
+  name: apikey
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: mcclane
+  annotations:
+    kubernetes.io/ingress.class: kong
+username: mcclane
+credentials:
+- apikey
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongClusterPlugin
+metadata:
+  name: key-auth-plugin
+  annotations:
+    kubernetes.io/ingress.class: "kong"
+  labels:
+    global: 'true'
+plugin: key-auth

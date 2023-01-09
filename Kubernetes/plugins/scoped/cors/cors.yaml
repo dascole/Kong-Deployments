@@ -1,0 +1,25 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: cors-plugin
+config:
+  credentials: true
+  exposed_headers:
+  - my-exposed-header
+  headers:
+  - my-allow-header
+  max_age: 600
+  methods:
+  - GET
+  - HEAD
+  - PUT
+  - PATCH
+  - POST
+  - DELETE
+  - OPTIONS
+  - TRACE
+  - CONNECT
+  origins:
+  - "*"
+  preflight_continue: true
+plugin: cors

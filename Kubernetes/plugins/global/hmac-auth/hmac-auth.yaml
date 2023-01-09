@@ -1,0 +1,20 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongClusterPlugin
+metadata:
+  name: hmac-auth-plugin
+  annotations:
+    kubernetes.io/ingress.class: "kong"
+  labels:
+    global: 'true'
+plugin: hmac-auth
+config:
+  algorithms:
+  - hmac-sha1
+  - hmac-sha256
+  - hmac-sha384
+  - hmac-sha512
+  clock_skew: 300
+  enforce_headers:
+  - Authorization
+  hide_credentials: true
+  validate_request_body: true

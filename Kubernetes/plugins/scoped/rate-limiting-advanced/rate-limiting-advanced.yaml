@@ -1,0 +1,26 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: rla-plugin
+config: 
+  dictionary_name: kong_rate_limiting_counters
+  hide_client_headers: false
+  identifier: consumer
+  limit:
+  - 5
+  redis:
+    cluster_addresses:
+    - redis-node
+    database: 0
+    host: redisHost
+    password: redisPass
+    port: 9000
+    ssl: false
+    ssl_verify: false
+    timeout: 2000
+  strategy: redis
+  sync_rate: 1
+  window_size:
+  - 5
+  window_type: sliding
+plugin: rate-limiting-advanced

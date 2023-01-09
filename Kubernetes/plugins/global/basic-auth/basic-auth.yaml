@@ -1,0 +1,30 @@
+apiVersion: v1
+data:
+  kongCredType: YmFzaWMtYXV0aA==
+  password: a29uZw==
+  username: Z3J1YmVy
+kind: Secret
+metadata:
+  name: uid-pw
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: gruber
+  annotations:
+    kubernetes.io/ingress.class: kong
+username: gruber
+credentials:
+- uid-pw
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongClusterPlugin
+metadata:
+  name: basic-auth-plugin
+  annotations:
+    kubernetes.io/ingress.class: "kong"
+  labels:
+    global: 'true'
+config: 
+  hide_credentials: true
+plugin: basic-auth

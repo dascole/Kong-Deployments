@@ -1,0 +1,50 @@
+apiVersion: v1
+data:
+  client_id: a29uZ2RlbW8=
+  client_secret: a29uZw==
+  kongCredType: b2F1dGgy
+  name: Z29hdXRo
+  redirect_uris: aHR0cHM6Ly9rb25naHEuY29t
+kind: Secret
+metadata:
+  name: oauth2
+  namespace: kongfused
+type: Opaque
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: powell
+  annotations:
+    kubernetes.io/ingress.class: kong
+username: powell
+credentials:
+- oauth2
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongClusterPlugin
+metadata:
+  name: oauth-plugin
+  annotations:
+    kubernetes.io/ingress.class: "kong"
+  labels:
+    global: 'true'
+config:
+  accept_http_if_already_terminated: false
+  auth_header_name: authorization
+  enable_authorization_code: false
+  enable_client_credentials: true
+  enable_implicit_grant: false
+  enable_password_grant: false
+  global_credentials: false
+  hide_credentials: false
+  mandatory_scope: false
+  persistent_refresh_token: false
+  pkce: lax
+  refresh_token_ttl: 1209600
+  reuse_refresh_token: false
+  scopes:
+  - email
+  token_expiration: 7200
+  provision_key: REPLACE-WITH-KEY
+plugin: oauth2
