@@ -1,0 +1,62 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: httpbin-ingress
+spec:
+  ingressClassName: kong
+  tls:
+  - hosts:
+      - tls.konghq.com
+    secretName: tls-secret
+  rules:
+  - http:
+      paths:
+      - path: /anything
+        pathType: Exact                                       
+        backend: 
+          service: 
+            name: httpbin
+            port:
+              number: 8000
+  - host: tls.konghq.com
+    http:
+      paths: 
+      - path: /anything
+        pathType: Exact
+        backend: 
+          service: 
+            name: httpbin
+            port: 
+              number: 8000
+  - http:
+      paths:
+      - path: /anything
+        pathType: Exact 
+        backend: 
+          service: 
+            name: httpbin
+            port:
+              number: 8000
+  - http:
+      paths:
+      - path: /get
+        pathType: Exact 
+        backend: 
+          service: 
+            name: httpbin
+            port:
+              number: 8000
+  - http:
+      paths:
+      - path: /uuid
+        pathType: Exact 
+        backend: 
+          service: 
+            name: httpbin
+            port:
+              number: 8000
+  # defaultBackend:
+  #   service:
+  #       name: kong
+  #       port: 
+  #           number: 80

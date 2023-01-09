@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+spec:
+  type: LoadBalancer
+  ports:
+  - name: keycloak
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: keycloak
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:16.1.0
+        # volumeMounts:
+        # - mountPath: /etc/x509/https
+        #   name: certificates
+        env:
+          - name: KEYCLOAK_USER
+            value: kong
+          - name: KEYCLOAK_PASSWORD
+            value: kong
+          - name: PROXY_ADDRESS_FORWARDING
+            value: "true"
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: https
+          containerPort: 8443
