@@ -1,6 +1,6 @@
 image:
   repository: kong/kong-gateway
-  tag: 2.8.2.1
+  tag: 2.8.2.0
   pullSecrets:
     - kong-enterprise-edition-docker
 
@@ -11,44 +11,34 @@ env:
   portal_gui_listen: 0.0.0.0:8003, 0.0.0.0:8446 ssl
   portal_api_listen: 0.0.0.0:8004, 0.0.0.0:8447 ssl
   prefix: /kong_prefix/
-  database: postgres
+  database: off
   log_level: debug
   admin_gui_auth_conf_secret: kong-session-config
   admin_api_uri: https://admin.kongfused.local:8444
   portal_gui_host: portal.kongfused.local:8446
   portal_gui_protocol: https
   portal_api_url: https://portalapi.kongfused.local:8447
-  # admin_gui_ssl_cert:  /etc/secrets/kongfused-cert-tls/tls.crt
-  # admin_gui_ssl_cert_key:  /etc/secrets/kongfused-cert-tls/tls.key
   proxy_access_log: /tmp/access.log
   proxy_error_log: /tmp/error.log
-  # lua_ssl_trusted_certificate: /etc/secrets/kongfused-cert-tls/ca.crt
-  # ssl_cert: /etc/secrets/selfsigned-cert-tls/tls.crt
-  # ssl_cert_key:  /etc/secrets/selfsigned-cert-tls/tls.key
-  # admin_ssl_cert: /etc/secrets/selfsigned-cert-tls/tls.crt
-  # admin_ssl_cert_key:  /etc/secrets/selfsigned-cert-tls/tls.key
 
   password:
     valueFrom:
       secretKeyRef:
-        name: kong-enterprise-superuser-password 
-        key: password 
+        name: kong-enterprise-superuser-password
+        key: password
   kong_admin_token:
     valueFrom:
       secretKeyRef:
         name: kong-enterprise-superuser-password
         key: password
-  admin_gui_session_conf:
-      valueFrom:
-      secretKeyRef:
-        name: kong-session-config
-        key: admin_gui_session_conf
+
 
 deployment:
   kong:
     enabled: true
     daemonset: false
 
+nameOverride: kong
 admin:
   enabled: true
   type: LoadBalancer
@@ -70,12 +60,10 @@ admin:
     - http2
 
 
+
 migrations:
   preUpgrade: true
   postUpgrade: true
-  annotations:
-    sidecar.istio.io/inject: false
-    kuma.io/sidecar-injection: "disabled"
 
 
 enterprise:
@@ -86,7 +74,7 @@ enterprise:
   portal:
     enabled: true
   rbac:
-    enabled: true
+    enabled: false
     admin_gui_auth: basic-auth
     admin_gui_auth_conf_secret: kong-session-config
 
@@ -120,8 +108,7 @@ portal:
     enabled: true
     servicePort: 8003
     containerPort: 8003
-    parameters: 
-    - http
+    parameters: []
 
   tls:
     enabled: true
@@ -141,8 +128,7 @@ portalapi:
     enabled: true
     servicePort: 8004
     containerPort: 8004
-    parameters: 
-    - http
+    parameters: []
 
   tls:
     enabled: true
@@ -153,21 +139,23 @@ portalapi:
 
 
 postgresql:
-  enabled: true
-  auth:
-    username: kong
-    database: kong
-  image:
-    tag: 13.6.0-debian-10-r52
-  service:
-    ports:
-      postgresql: "5432"
+  enabled: false
 
 ingressController:
-  installCRDS: false
   enabled: true
   image:
     repository: kong/kubernetes-ingress-controller
     tag: "2.7"
   args:
-  - --log-level=debug  
+  - --log-level=debug
+  - --dump-config=true
+  admissionWebhook:
+    enabled: true
+    certificate:
+      secretName: kong-validation-webhook
+  env:
+    kong_admin_token:
+      valueFrom:
+        secretKeyRef:
+          name: kong-enterprise-superuser-password
+          key: password

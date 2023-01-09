@@ -1,0 +1,385 @@
+image:
+  repository: kong/kong-gateway
+  tag: 2.8.2.0
+  pullSecrets:
+    - kong-enterprise-edition-docker
+
+env:
+  admin_gui_listen: 0.0.0.0:8002 http2, 0.0.0.0:8445 ssl, 0.0.0.0:9811
+  admin_gui_url: https://kongfused.local:8445
+  admin_listen: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+  portal_gui_listen: 0.0.0.0:8003, 0.0.0.0:8446 ssl
+  portal_api_listen: 0.0.0.0:8004, 0.0.0.0:8447 ssl
+  prefix: /kong_prefix/
+  database: postgres
+  log_level: debug
+  admin_gui_auth_conf_secret: kong-session-config
+  admin_api_uri: https://admin.kongfused.local:8444
+  portal_gui_host: portal.kongfused.local:8446
+  portal_gui_protocol: https
+  portal_api_url: https://portalapi.kongfused.local:8447
+  proxy_access_log: /tmp/access.log
+  proxy_error_log: /tmp/error.log
+
+  password:
+    valueFrom:
+      secretKeyRef:
+        name: kong-enterprise-superuser-password
+        key: password
+  kong_admin_token:
+    valueFrom:
+      secretKeyRef:
+        name: kong-enterprise-superuser-password
+        key: password
+
+
+deployment:
+  kong:
+    enabled: true
+    daemonset: false
+
+
+nameOverride: kong
+admin:
+  enabled: true
+  type: LoadBalancer
+  annotations:
+    konghq.com/protocol: "https"
+
+  http:
+    enabled: true
+    servicePort: 8001
+    containerPort: 8001
+    parameters:
+    - http
+
+  tls:
+    enabled: true
+    servicePort: 8444
+    containerPort: 8444
+    parameters:
+    - http2
+
+
+
+migrations:
+  preUpgrade: true
+  postUpgrade: true
+
+
+
+enterprise:
+  enabled: true
+  license_secret: kong-enterprise-license
+  vitals:
+    enabled: false
+  portal:
+    enabled: true
+  rbac:
+    enabled: false
+    admin_gui_auth: basic-auth
+    admin_gui_auth_conf_secret: kong-session-config
+
+manager:
+  enabled: true
+  type: LoadBalancer
+  annotations:
+    konghq.com/protocol: "https"
+
+  http:
+    enabled: true
+    servicePort: 8002
+    containerPort: 8002
+
+  tls:
+    enabled: true
+    servicePort: 8445
+    containerPort: 8445
+    parameters:
+    - http2
+    - https
+
+
+portal:
+  enabled: true
+  type: LoadBalancer
+  annotations:
+    konghq.com/protocol: "https"
+
+  http:
+    enabled: true
+    servicePort: 8003
+    containerPort: 8003
+    parameters: []
+
+  tls:
+    enabled: true
+    servicePort: 8446
+    containerPort: 8446
+    parameters:
+    - http2
+
+
+portalapi:
+  enabled: true
+  type: LoadBalancer
+  annotations:
+    konghq.com/protocol: "https"
+
+  http:
+    enabled: true
+    servicePort: 8004
+    containerPort: 8004
+    parameters: []
+
+  tls:
+    enabled: true
+    servicePort: 8447
+    containerPort: 8447
+    parameters:
+    - http2
+
+
+postgresql:
+  enabled: true
+  auth:
+    username: kong
+    database: kong
+  image:
+    tag: 13.6.0-debian-10-r52
+  service:
+    ports:
+      postgresql: "5432"
+
+ingressController:
+  enabled: true
+  image:
+    repository: kong/kubernetes-ingress-controller
+    tag: "2.7"
+  args:
+  - --log-level=debug
+  - --dump-config=true
+  admissionWebhook:
+    enabled: true
+    certificate:
+      secretName: kong-validation-webhook
+  env:
+    kong_admin_token:
+      valueFrom:
+        secretKeyRef:
+          name: kong-enterprise-superuser-password
+          key: password
+
+
+extraObjects:
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      annotations:
+        konghq.com/plugins: basic-auth-plugin
+      name: basic-auth
+      namespace: kongfused
+    spec:
+      ingressClassName: kong
+      rules:
+      - http:
+          paths:
+          - path: /basic-auth
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: echo
+                port:
+                  number: 80
+  - apiVersion: v1
+    data:
+      kongCredType: YmFzaWMtYXV0aA==
+      password: a29uZw==
+      username: Z3J1YmVy
+    kind: Secret
+    metadata:
+      name: uid-pw
+  - apiVersion: configuration.konghq.com/v1
+    kind: KongConsumer
+    metadata:
+      name: gruber
+      annotations:
+        kubernetes.io/ingress.class: kong
+    username: gruber
+    credentials:
+    - uid-pw
+  - apiVersion: configuration.konghq.com/v1
+    kind: KongPlugin
+    metadata:
+      name: basic-auth-plugin
+    plugin: basic-auth
+    config:
+      hide_credentials: true
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: proxy-to-postman
+    spec:
+      ports:
+      - protocol: TCP
+        port: 80
+      type: ExternalName
+      externalName: postman-echo.com
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      annotations:
+        konghq.com/strip-path: "false"
+      name: mockbin
+      namespace: kongfused
+    spec:
+      ingressClassName: kong
+      rules:
+      - http:
+          paths:
+          - path: /get
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: proxy-to-postman
+                port:
+                  number: 80
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      annotations:
+        konghq.com/https-redirect-status-code: "308"
+        konghq.com/protocols: https
+      name: echo
+      namespace: kongfused
+    spec:
+      ingressClassName: kong
+      rules:
+      - http:
+          paths:
+          - path: /echo
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: echo
+                port:
+                  number: 80
+  - apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      annotations:
+        konghq.com/strip-path: "false"
+      name: httpbin
+      namespace: kongfused
+    spec:
+      ingressClassName: kong
+      rules:
+      - http:
+          paths:
+          - path: /anything
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: httpbin
+                port:
+                  number: 8000
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: echo
+      name: echo
+    spec:
+      ports:
+      - port: 8080
+        name: high
+        protocol: TCP
+        targetPort: 8080
+      - port: 80
+        name: low
+        protocol: TCP
+        targetPort: 8080
+      selector:
+        app: echo
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      labels:
+        app: echo
+      name: echo
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: echo
+      strategy: {}
+      template:
+        metadata:
+          creationTimestamp: null
+          labels:
+            app: echo
+        spec:
+          containers:
+          - image: gcr.io/kubernetes-e2e-test-images/echoserver:2.2
+            name: echo
+            ports:
+            - containerPort: 8080
+            env:
+              - name: NODE_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: spec.nodeName
+              - name: POD_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.name
+              - name: POD_NAMESPACE
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.namespace
+              - name: POD_IP
+                valueFrom:
+                  fieldRef:
+                    fieldPath: status.podIP
+            resources: {}
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: httpbin
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: httpbin
+      labels:
+        app: httpbin
+        service: httpbin
+    spec:
+      ports:
+      - name: http
+        port: 8000
+        targetPort: 80
+      selector:
+        app: httpbin
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: httpbin
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: httpbin
+          version: v1
+      template:
+        metadata:
+          labels:
+            app: httpbin
+            version: v1
+        spec:
+          serviceAccountName: httpbin
+          containers:
+          - image: docker.io/kennethreitz/httpbin
+            imagePullPolicy: IfNotPresent
+            name: httpbin
+            ports:
+            - containerPort: 80
