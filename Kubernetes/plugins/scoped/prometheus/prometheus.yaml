@@ -1,0 +1,6 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongClusterPlugin
+metadata:
+  name: prometheus-plugin
+config: {}  
+plugin: prometheus
