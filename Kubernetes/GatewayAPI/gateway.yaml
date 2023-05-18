@@ -1,0 +1,27 @@
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: Gateway
+metadata:
+  name: kong
+spec:
+  gatewayClassName: kong
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80
+    allowedRoutes:
+      kinds:
+      - kind: HTTPRoute
+      namespaces:
+        from: Selector
+        selector:
+          matchLabels:
+            kubernetes.io/metadata.name: kongfused
+    # hostname: foo.com
+  # - name: http2
+  #   protocol: HTTPS
+  #   port: 8443
+    # tls: # TLS configuration
+    #   mode: SIMPLE
+    #   certificateRef:
+    #     name: tls-secret
+    #     namespace: default
