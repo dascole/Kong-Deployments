@@ -1,0 +1,15 @@
+apiVersion: kuma.io/v1alpha1
+kind: MeshGateway
+mesh: default
+metadata:
+  name: edge-gateway
+spec:
+  selectors:
+  - match:
+      kuma.io/service: edge-gateway
+  conf:
+    listeners:
+      - port: 8080
+        protocol: HTTP
+        tags:
+          port: http/8080

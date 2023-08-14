@@ -1,0 +1,25 @@
+apiVersion: kuma.io/v1alpha1
+kind: MeshTimeout
+metadata:
+  name: my-timeout
+  namespace: kong-mesh-system # Policies are now namespaced.
+  labels:
+    kuma.io/mesh: default # optional mesh
+spec:
+  targetRef: # (1) top Level targetRef, defines which dataplanes are getting their configuration modified by this policy
+    kind: MeshSubset
+    tags:
+     k8s.kuma.io/service-name: frontend
+  to: # a list of configuration to apply to a subset of the outgoing traffic
+    - targetRef: # (2)
+        kind: MeshService
+        name: backend_kuma-demo_svc_3001
+      default: # actual configuration
+        http: 
+          requestTimeout: 68s
+  from: # a list of configuration to apply to a subset of the incoming traffic
+    - targetRef: # (4)
+        kind: Mesh
+      default: # actual configuration 
+        http: 
+         requestTimeout: 51s

@@ -1,0 +1,20 @@
+apiVersion: kuma.io/v1alpha1
+kind: MeshGatewayRoute
+mesh: default
+metadata:
+  name: edge-gateway-route
+spec:
+  selectors:
+    - match:
+        kuma.io/service: edge-gateway
+        port: http/8080
+  conf:
+    http:
+      rules:
+        - matches:
+            - path:
+                match: PREFIX
+                value: /
+          backends:
+            - destination:
+                kuma.io/service: frontend_kuma-demo_svc_8080

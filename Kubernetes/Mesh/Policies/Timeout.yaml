@@ -1,0 +1,21 @@
+apiVersion: kuma.io/v1alpha1
+kind: Timeout
+mesh: default
+metadata:
+  name: timeout-all-default
+spec:
+  sources:  # outbound policy, applies to the SOURCE matcher
+    - match:
+        kuma.io/service: 'frontend_kuma-demo_svc_8080'
+  destinations:
+    - match:
+        kuma.io/service: 'backend_kuma-demo_svc_3001'
+  conf:
+    connectTimeout: 77s # all protocols
+    tcp: # tcp, kafka
+      idleTimeout: 1h 
+    http: # http, http2, grpc
+      requestTimeout: 88s 
+      idleTimeout: 1h
+      streamIdleTimeout: 830m
+      maxStreamDuration: 0s
