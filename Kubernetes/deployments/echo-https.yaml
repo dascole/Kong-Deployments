@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: caddyfile
+data:
+  Caddyfile: |
+    echo.foo.svc.cluster.local {
+        reverse_proxy echo:8080
+        tls /etc/caddy/tls/cert.pem /etc/caddy/tls/key.pem
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: echo
+  name: echo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: echo
+  template:
+    metadata:
+      labels:
+        app: echo
+    spec:
+      containers:
+      - name: echo
+        image: gcr.io/kubernetes-e2e-test-images/echoserver:2.2
+        ports:
+        - containerPort: 8080
+
+      - name: caddy
+        image: stefanprodan/caddy
+        ports:
+        - containerPort: 443
+        volumeMounts:
+          - mountPath: /etc/caddy/Caddyfile
+            name: caddyfile-volume
+            subPath: Caddyfile
+          - mountPath: /etc/caddy/tls
+            name: tls-volume
+            readOnly: true
+      volumes:
+      - name: caddyfile-volume
+        configMap:
+          name: caddyfile
+      - name: tls-volume
+        secret:
+          secretName: echo-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: echo
+  name: echo
+spec:
+  ports:
+  - port: 443
+    name: https
+    protocol: TCP
+    targetPort: 443
+  selector:
+    app: echo
