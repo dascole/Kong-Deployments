@@ -1,0 +1,111 @@
+packages:
+  - npm
+  - nodejs
+  - git
+write_files:
+- encoding: b64
+  content: IS9iaW4vc2gKCmVjaG8gJ3sibGljZW5zZSI6eyJzaWduYXR1cmUiOiIxNjhhYTc1NjU2NjZiODYwNWY5NDRhNTRhNWM4M2JhOTYxNmE4MGM1NGJhNDkxYjFhMDA3YmViYjVhNDM3OGIxYTI5OGIzMjcwMDM2OWQyMjkwOWIzZWVmZTAzMTJmNzc5ODU0YTI3ZTVlNjE2MmIyMGRkYjhmYzk2NWFiNmZkNyIsInBheWxvYWQiOnsiY3VzdG9tZXIiOiJSb2JDbyIsImxpY2Vuc2VfY3JlYXRpb25fZGF0ZSI6IjIwMTktMDMtMjkiLCJwcm9kdWN0X3N1YnNjcmlwdGlvbiI6IktvbmcgRW50ZXJwcmlzZSBFZGl0aW9uIiwiYWRtaW5fc2VhdHMiOiI1Iiwic3VwcG9ydF9wbGFuIjoiQnVzaW5lc3MiLCJsaWNlbnNlX2V4cGlyYXRpb25fZGF0ZSI6IjIwMzAtMDEtMDEiLCJsaWNlbnNlX2tleSI6IkFTREFTREFTREFTREFTREFTREFTREFTREFTRF9hMVZBU0FTRCJ9LCJ2ZXJzaW9uIjoxfX0nID4gL2hvbWUvdWJ1bnR1L2xpY2Vuc2UuanNvbgplY2hvICJleHBvcnQgS01FU0hfTElDRU5TRV9QQVRIPS9ob21lL3VidW50dS9saWNlbnNlLmpzb24iID4+IC9ob21lL3VidW50dS8uYmFzaHJjCnNvdXJjZSAvaG9tZS91YnVudHUvLmJhc2hyYwpjZCAvaG9tZS91YnVudHUKY3VybCAtTCBodHRwczovL2RvY3Mua29uZ2hxLmNvbS9tZXNoL2luc3RhbGxlci5zaCB8IHNoIC0KY2Qga29uZy1tZXNoLSovYmluCnN1ZG8gY3AgKiAvdXNyL2xvY2FsL2Jpbi8KCmNhdCA8PEVPRiA+IC9ldGMvc3lzdGVtZC9zeXN0ZW0va3VtYS1jcC5zZXJ2aWNlCltVbml0XQpEZXNjcmlwdGlvbj1NZXNoIGNvbnRyb2wgcGxhbmUKCltTZXJ2aWNlXQpVc2VyPXJvb3QKV29ya2luZ0RpcmVjdG9yeT0vdXNyL2xvY2FsL2JpbgpFeGVjU3RhcnQ9a3VtYS1jcCBydW4KUmVzdGFydD1hbHdheXMKCltJbnN0YWxsXQpXYW50ZWRCeT1tdWx0aS11c2VyLnRhcmdldApFT0YKCnN5c3RlbWN0bCBkYWVtb24tcmVsb2FkCnN5c3RlbWN0bCBzdGFydCBrdW1hLWNwLnNlcnZpY2UKc3lzdGVtY3RsIGVuYWJsZSBrdW1hLWNwLnNlcnZpY2U=
+  owner: root:root
+  path: /kuma/enable-cp.sh
+  permissions: '0755'
+- path: /etc/systemd/resolved.conf
+  append: true
+  content: |
+    MulticastDNS=yes
+- path: /etc/systemd/system/mdns@.service
+  content: |
+    [Service]
+    Type=oneshot
+    ExecStart=/usr/bin/systemd-resolve --set-mdns=yes --interface=%i
+    After=sys-subsystem-net-devices-%i.device
+
+    [Install]
+    WantedBy=sys-subsystem-net-devices-%i.device
+- encoding: b64
+  content: Y2QgL2hvbWUvdWJ1bnR1CmN1cmwgLUwgaHR0cHM6Ly9kb2NzLmtvbmdocS5jb20vbWVzaC9pbnN0YWxsZXIuc2ggfCBzaCAtCnN1ZG8gY3Aga29uZy1tZXNoLSovYmluLyogL3Vzci9sb2NhbC9iaW4vCgojIGluc3RhbGwgbnBtCiMgY2xvbmUgYW5kIHJ1biBkZW1vIGFwcApucG0gaW5zdGFsbCBleHByZXNzCm5wbSBpbnN0YWxsIGlvcmVkaXMKZ2l0IGNsb25lIGh0dHBzOi8vZ2l0aHViLmNvbS9rdW1haHEva3VtYS1jb3VudGVyLWRlbW8uZ2l0CgoKY2F0IDw8RU9GID4gL2hvbWUvdWJ1bnR1L2RhdGFwbGFuZS1hcHAueWFtbAogIHR5cGU6IERhdGFwbGFuZQogIG1lc2g6IGRlZmF1bHQKICBuYW1lOiBkZW1vLWFwcAogIG5ldHdvcmtpbmc6IAogICAgYWRkcmVzczogJChob3N0bmFtZSAtSSkKICAgIG91dGJvdW5kOgogICAgICAtIHBvcnQ6IDE2Mzc5CiAgICAgICAgdGFnczoKICAgICAgICAgIGt1bWEuaW8vc2VydmljZTogcmVkaXMKICAgIGluYm91bmQ6IAogICAgICAtIHBvcnQ6IDE1MDAwCiAgICAgICAgc2VydmljZVBvcnQ6IDUwMDAKICAgICAgICBzZXJ2aWNlQWRkcmVzczogMTI3LjAuMC4xCiAgICAgICAgdGFnczogCiAgICAgICAgICBrdW1hLmlvL3NlcnZpY2U6IGFwcAogICAgICAgICAga3VtYS5pby9wcm90b2NvbDogaHR0cApFT0YKCgprdW1hY3RsIGNvbmZpZyBjb250cm9sLXBsYW5lcyBhZGQgLS1hZGRyZXNzIGh0dHA6Ly9tZXNoLWNwOjU2ODEgLS1uYW1lIG1lc2gtY3AgLS1vdmVyd3JpdGUKa3VtYWN0bCBnZW5lcmF0ZSBkYXRhcGxhbmUtdG9rZW4gLS1uYW1lPWRlbW8tYXBwIC0tdmFsaWQtZm9yIDk2aCA+IC9ob21lL3VidW50dS9rdW1hLXRva2VuLWRlbW8gCgpzeXN0ZW1jdGwgZGFlbW9uLXJlbG9hZApzeXN0ZW1jdGwgc3RhcnQgZGVtby5zZXJ2aWNlCnN5c3RlbWN0bCBlbmFibGUgZGVtby5zZXJ2aWNlCgpzeXN0ZW1jdGwgc3RhcnQga3VtYS5kcC5hcHAuc2VydmljZQpzeXN0ZW1jdGwgZW5hYmxlIGt1bWEuZHAuYXBwLnNlcnZpY2UKCg==
+  owner: root:root
+  path: /kuma/enable-dp-app.sh
+  permissions: '0755'
+- path: /etc/systemd/resolved.conf
+  append: true
+  content: |
+    MulticastDNS=yes
+- path: /etc/systemd/system/mdns@.service
+  content: |
+    [Service]
+    Type=oneshot
+    ExecStart=/usr/bin/systemd-resolve --set-mdns=yes --interface=%i
+    After=sys-subsystem-net-devices-%i.device
+
+    [Install]
+    WantedBy=sys-subsystem-net-devices-%i.device
+- path: /etc/systemd/system/demo.service
+  content: |
+    [Unit]
+    Description=Kuma demo app
+    
+    [Service]
+    Environment="REDIS_HOST=IP_PLACEHOLDER"
+    Environment="REDIS_PORT=16379"
+    User=root
+    WorkingDirectory=/home/ubuntu/kuma-counter-demo
+    ExecStart=npm start --prefix=/home/ubuntu/kuma-counter-demo/app
+    Restart=always
+    
+    [Install]
+    WantedBy=multi-user.target
+- path: /etc/systemd/system/kuma.dp.app.service
+  content: |
+    [Unit]
+    Description=Kuma demo dp
+    
+    [Service]
+    User=root
+    WorkingDirectory=/usr/local/bin
+    ExecStart=kuma-dp run --cp-address=https://mesh-cp:5678/ --log-level=debug --dns-enabled=false --dataplane-token-file=/home/ubuntu/kuma-token-demo --dataplane-file=/home/ubuntu/dataplane-app.yaml
+    Restart=always
+    
+    [Install]
+    WantedBy=multi-user.target
+- encoding: b64
+  content: IyEvYmluL3NoCnN1ZG8gYXB0IGluc3RhbGwgcmVkaXMgLXkKc2VkIC1pICIvYmluZCAxMjcuMC4wLjEgOjoxL2NcYmluZCAwLjAuMC4wIiAvZXRjL3JlZGlzL3JlZGlzLmNvbmYKc2VkIC1pICIvcG9ydCA2Mzc5L2NcI3BvcnQgNjM3OSIgL2V0Yy9yZWRpcy9yZWRpcy5jb25mCmVjaG8gInBvcnQgMjYzNzkiID4+IC9ldGMvcmVkaXMvcmVkaXMuY29uZgoKc3VkbyBzeXN0ZW1jdGwgc3RhcnQgcmVkaXMtc2VydmVyCgpjYXQgPDxFT0YgPiAvaG9tZS91YnVudHUvLmJhc2hyYwpleHBvcnQgUkVESVNfSE9TVD1sb2NhbGhvc3QKZXhwb3J0IFJFRElTX0hPU1Q9MTYzNzkKRU9GCgpjZCAvaG9tZS91YnVudHUKY3VybCAtTCBodHRwczovL2RvY3Mua29uZ2hxLmNvbS9tZXNoL2luc3RhbGxlci5zaCB8IHNoIC0Kc3VkbyBjcCBrb25nLW1lc2gtKi9iaW4vKiAvdXNyL2xvY2FsL2Jpbi8KCgpjYXQgPDxFT0YgPiAvaG9tZS91YnVudHUvZGF0YXBsYW5lLXJlZGlzLnlhbWwKICB0eXBlOiBEYXRhcGxhbmUKICBtZXNoOiBkZWZhdWx0CiAgbmFtZTogbWVzaC1yZWRpcwogIG5ldHdvcmtpbmc6IAogICAgYWRtaW46CiAgICAgIHBvcnQ6IDk5MDUKICAgIGFkZHJlc3M6ICQoaG9zdG5hbWUgLUkpCiAgICBpbmJvdW5kOiAKICAgICAgLSBwb3J0OiAxNjM3OQogICAgICAgIHNlcnZpY2VQb3J0OiAyNjM3OQogICAgICAgIHNlcnZpY2VBZGRyZXNzOiAxMjcuMC4wLjEKICAgICAgICB0YWdzOiAKICAgICAgICAgIGt1bWEuaW8vc2VydmljZTogbWVzaC1yZWRpcwogICAgICAgICAga3VtYS5pby9wcm90b2NvbDogdGNwCkVPRgoKCmt1bWFjdGwgY29uZmlnIGNvbnRyb2wtcGxhbmVzIGFkZCAtLWFkZHJlc3MgaHR0cDovL21lc2gtY3A6NTY4MSAtLW5hbWUgbWVzaC1jcCAtLW92ZXJ3cml0ZQprdW1hY3RsIGdlbmVyYXRlIGRhdGFwbGFuZS10b2tlbiAtLW5hbWU9bWVzaC1yZWRpcyAtLXZhbGlkLWZvcj05NmggPiAvaG9tZS91YnVudHUva3VtYS10b2tlbi1yZWRpcyAKCnN5c3RlbWN0bCByZXN0YXJ0IHJlZGlzLnNlcnZpY2UKc3lzdGVtY3RsIGVuYWJsZSByZWRpcy5zZXJ2aWNlCgpzeXN0ZW1jdGwgZGFlbW9uLXJlbG9hZApzeXN0ZW1jdGwgc3RhcnQga3VtYS5kcC5yZWRpcy5zZXJ2aWNlCnN5c3RlbWN0bCBlbmFibGUga3VtYS5kcC5yZWRpcy5zZXJ2aWNlCgo=
+  owner: root:root
+  path: /kuma/enable-dp-redis.sh
+  permissions: '0755'
+- path: /etc/systemd/resolved.conf
+  append: true
+  content: |
+    MulticastDNS=yes
+- path: /etc/systemd/system/mdns@.service
+  content: |
+    [Service]
+    Type=oneshot
+    ExecStart=/usr/bin/systemd-resolve --set-mdns=yes --interface=%i
+    After=sys-subsystem-net-devices-%i.device
+
+    [Install]
+    WantedBy=sys-subsystem-net-devices-%i.device
+- path: /etc/systemd/system/kuma.dp.redis.service
+  content: |
+    [Unit]
+    Description=Kuma demo dp
+    
+    [Service]
+    User=root
+    WorkingDirectory=/usr/local/bin
+    ExecStart=kuma-dp run --cp-address=https://mesh-cp:5678/ --log-level=debug --dns-enabled=false --dataplane-token-file=/home/ubuntu/kuma-token-redis --dataplane-file=/home/ubuntu/dataplane-redis.yaml
+    Restart=always
+    
+    [Install]
+    WantedBy=multi-user.target
+runcmd:
+    - [ /usr/bin/sh, -c, /kuma/enable-cp.sh ]
+    - systemctl restart systemd-resolved.service
+    - systemctl start mdns@enp0s2.service
+    - systemctl enable mdns@enp0s2.service
+    - [ /usr/bin/sh, -c, /kuma/enable-dp-app.sh ]
+    - [ /usr/bin/sh, -c, /kuma/enable-dp-redis.sh ]
+    - sed -i "s/IP_PLACEHOLDER/$(hostname -I | awk '{print $1}')/g" /etc/systemd/system/demo.service
+    - systemctl daemon-reload
+    - systemctl restart demo.service
+    - [ /usr/bin/chown, -R, ubuntu:ubuntu, /home/ubuntu ]
